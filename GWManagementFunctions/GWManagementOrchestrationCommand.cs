@@ -78,7 +78,6 @@ namespace GWManagementFunctions
         /// Receives the message ACK from the device (async).
         /// </summary>
         /// <param name="serviceClient">The service client.</param>
-        /// <param name="token">The token.</param>
         /// <returns></returns>
         private static async Task ReceiveFeedbackAsync(ServiceClient serviceClient, ILogger log)
         {

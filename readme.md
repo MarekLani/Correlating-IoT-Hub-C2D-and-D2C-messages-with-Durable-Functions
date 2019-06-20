@@ -1,17 +1,19 @@
 # Correlating IoT Hub C2D and D2C messages with Durable Functions
 
-This repository contains code sample which implements correlation of IoT Hub C2D and D2C messages and  thus enables asynchronous request-response communication model thru IoT Hub messaging feature. This article expects you have previous knowledge on Azure Durable Functions and Azure IoT Hub.
+This repository contains code sample which implements correlation of IoT Hub C2D and D2C messages and  thus enables asynchronous request-response communication model thru IoT Hub messaging feature. To be able to follow this article, you should have knowledge of Azure Durable Functions and Azure IoT Hub.
 
-Our need to correlate IoT Hub C2D and D2C messages arose during work within IoT project we worked on. We have used SW IoT gateway ([SW Gateway Deamon solution from IQRF](https://www.iqrf.org/technology/iqrf-gw-daemon) )  deployable to wide range of devices (including Raspberry PI), which surfaces it's management API thru IoT Hub messaging. More specifically it is capable to receive management commands thru direct cloud to device (C2D - request) messages sent thru IoT Hub and subsequently send response thru device to cloud (D2C) message. Aim of project was to built mobile management application. To achieve that we needed to implement management console for such device, we need to build backend which will handle communication with the device thru IoT Hub. 
+Our need to correlate IoT Hub C2D and D2C messages arose during work on IoT project, in which we have used SW IoT gateway ([SW Gateway Deamon solution from IQRF](https://www.iqrf.org/technology/iqrf-gw-daemon) )  deployable to wide range of devices (including Raspberry PI), which surfaces it's management API thru IoT Hub messaging. More specifically it is capable to receive management commands thru direct cloud to device (C2D - request) messages sent thru IoT Hub and subsequently send response thru device to cloud (D2C) message. This management feature allows users to bond and unbond new sensors to and from the gateway, schedule sensor value reading tasks, put sensors to sleep to save battery life etc.
 
-In case of device management implemented using messages floating thru IoT Hub there is need to perform following steps: 
+Aim of the project was to built management application, which would allow users to manage GW using their mobile phones. To achieve that, we needed to implement backend which would handle communication with the gateway thru IoT Hub. 
 
-- Initiate command (User/Management Console)
-- Send command to device thru IoT Hub (C2D)
--  Receive and process results from device (D2C)
--  Provide results back to user or management console  
+Process of management action invocation and processing is following: 
 
-To enable such manner of management we decided to utilize **durable functions** and it's orchestration context and built solution with following architecture:
+- Initiate command (User from the mobile management application)
+- Send command to gateway thru IoT Hub (C2D)
+-  Receive and process results from gateway (D2C)
+-  Provide results back to user/ mobile management application 
+
+To enable such manner of gateway management we decided to utilize **durable functions** and it's orchestration context and we built solution with following architecture:
 
 ![Architecture](AzureFunctionsArchitecture.png)
 
@@ -24,7 +26,7 @@ Below we describe individual components to the solution.
 
 #### GW Management Orchestration Function
 
-GW Management Orchestration function is durable function which starts orchestrator context. This orchestration contains two patterns, namely [functions chaining](https://docs.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-concepts#chaining) and [human interaction](https://docs.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-concepts#human), or better said approval process, as we do not involve human. This function gets invoked by the command in form of REST request coming from management mobile application (for demo purposes just Postman or other REST request generator tool). It chains two pieces of logic. First encapsulated within *SentDirectMessageToGW* function is forwarding command to GW device thru IoT Hub in form of C2D message. Important to note is, that json message contains *msgId* field , which holds the id of orchestration, which is later forwarded from GW device in D2C message and received by *IoTHubListener* function. Thanks to that, we are able to correlate result received from IoT Hub with related instance of durable functions and ultimately with original request/command. 
+GW Management Orchestration function is  durable function with it's own orchestration context. This orchestration contains two patterns, namely [functions chaining](https://docs.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-concepts#chaining) and [human interaction](https://docs.microsoft.com/en-us/azure/azure-functions/durable/durable-functions-concepts#human), or better said approval process, as we do not involve human in the process. This function gets invoked by REST request coming from management mobile application (in latter section How to Run This Sample we use just Postman or other REST request generator tool). It chains two pieces of logic. First part encapsulated within *SentDirectMessageToGW* function is forwarding command to GW device thru IoT Hub in form of C2D message. Important to note is, that json message contains *msgId* field, which holds the id of orchestration, which is later forwarded from GW device in D2C message and received by *IoTHubListener* function. Thanks to that, we are able to correlate result received from IoT Hub with related instance of durable function and ultimately with original request. 
 
 ```C#
 public class GWManagementOrchestrationCommand
@@ -94,8 +96,6 @@ public class GWManagementOrchestrationCommand
     /// <summary>
     /// Receives the message ACK from the device (async).
     /// </summary>
-    /// <param name="serviceClient">The service client.</param>
-    /// <param name="token">The token.</param>
     /// <returns></returns>
     private static async Task ReceiveFeedbackAsync(ServiceClient serviceClient, ILogger log)
     {
@@ -125,8 +125,6 @@ As stated, for the demonstration purposes IQRF Gateway is implemented only as si
  private static async Task ReceiveCommands(DeviceClient deviceClient)
  {
      Console.WriteLine("\nDevice waiting for commands from IoTHub...\n");
-     Console.WriteLine("Use the IoT Hub Azure Portal to send a message to this device.\n");
-
      Message receivedMessage;
      string messageData;
 
@@ -146,6 +144,7 @@ As stated, for the demonstration purposes IQRF Gateway is implemented only as si
              //In real scenario this message will contain response to command
              Message eventMessage = new Message(Encoding.UTF8.GetBytes($"{{\"msgId\":\"{jsonObject.msgId}\"}}"));
              await deviceClient.SendEventAsync(eventMessage).ConfigureAwait(false);
+             Console.WriteLine($"Sent message: {{\"msgId\":\"{jsonObject.msgId}\"}}");
          }
          catch(Exception e) {
              Console.WriteLine(e.Message);
@@ -161,11 +160,9 @@ As stated, for the demonstration purposes IQRF Gateway is implemented only as si
                
 ```
 
-
-
 #### IoT Hub Listener
 
-IoT Hub Listener is simple Azure Function triggered by new telemetry message arriving to IoT Hub. As this function is running within the same Function App as GW Management Orchestration function, we can use *DurableOrchestrationClient* to raise event and to "wake up" orchestration process, as they share the same context. To continue respective orchestration context, we use *msgId* field of received message, which holds value of orchestration Id.
+IoT Hub Listener is simple Azure Function triggered by new telemetry message arriving to IoT Hub. As this function is running within the same Function App as GW Management Orchestration function, we can use *DurableOrchestrationClient* to raise event and to "wake up" orchestration process, as they share the same context. To continue respective orchestration context, we use *msgId* field from received message, which holds value of orchestration Id.
 
 ```C#
 [FunctionName("IoTHubListener")]
@@ -186,9 +183,9 @@ public static async Task Run([IoTHubTrigger("messages/events", Connection = "IoT
 
 ### Invoking complex management actions on IQRF Gateway
 
-Usually management actions on IQRF gateway consist of several commands/activities that need to be invoked. For example, if we simplify unbonding sensor from gateway device, gateway requires to wait for the sensor to wake up (sensor can be asleep to save battery life) only then unbonding command can be invoked. At the end there is also need to update database, which stores list of connected sensors in database. We solved this by creating Durable Functions orchestration hierarchies. 
+Usually management actions on IQRF gateway consist of several commands/activities that need to be invoked. For example, if we simplify unbonding sensor from gateway device, gateway requires to wait for the sensor to wake up (sensor can be asleep to save battery life) only then unbonding command can be invoked. At the end, there is also need to update database, which stores list of connected sensors in database. We solved this by creating Durable Functions orchestration hierarchies. 
 
-Main orchestration context is chaining several sub orchestrations (in this case three) in order to invoke all necessary commands. If specific step requires invocation of command on GW, it is invoked thru within sub orchestration  using *GWManagementOrchestrationFunction* which encapsulates logic for C2D and D2C message correlation. This function is invoked with different json payload based on the type of command that needs to be executed. See implementation of device unboding logic bellow. Please not, that *DeviceSleepCheck* and *InvokeDatabaseOperation* activities are bit more complex and are implemented as separate functions. We state their code below as well.
+Main orchestration context is chaining several sub orchestrations (in this case three) in order to invoke all the necessary commands. If specific step requires invocation of command on GW, it is invoked within sub orchestration using *GWManagementOrchestrationFunction* which encapsulates logic for C2D and D2C message correlation. This function is invoked with different json payloads based on the type of command that needs to be executed. See implementation of device unboding logic bellow. Please not, that *DeviceSleepCheck* and *InvokeDatabaseOperation* activities are bit more complex and are implemented as separate functions. We state their code below as well.
 
 ```C#
 public static class GWManagementOrchestrationAction
@@ -242,12 +239,11 @@ public static class GWManagementOrchestrationAction
     ...
 ```
 
-**Sleep check** goes one level deeper when it comes to sub orchestration hierarchy. It is itself ran as monitor orchestrator function and every run it executes *GWSendCommandWithResponse* sub orchestration. It repeatedly asks GW for device enumeration. Based on the result, it is capable to say, if sensor to be unbonded is asleep or not. If it is, it schedules next check in 10 seconds. If device is woken up, it finishes execution and returns  execution control back to parent orchestration. Below you can find implementation of Sleep Check logic.
+**Sleep check** goes one level deeper when it comes to orchestration hierarchy. It is itself ran as monitor orchestrator function and every run it executes *GWSendCommandWithResponse* sub orchestration. It repeatedly asks GW for device enumeration. Based on the result, it is capable to say, if sensor to be unbonded is asleep or not. If it is, it schedules next check in 10 seconds. If device is woken up, it finishes execution and returns  execution control back to parent orchestration context. Below you can find implementation of Sleep Check logic.
 
 ```c#
 public static class DeviceManagementOperations
 {
-
     /// <summary>
     /// Checks if device sleeps and if so waits for it to wake up
     /// </summary>
@@ -291,7 +287,7 @@ public static class DeviceManagementOperations
 }
 ```
 
-*InvokeDatabaseOperation*  is simple activity triggered durable function, which connects to database and updates respective rows, after sensor was unbonded.
+**Invoke Database Operation**  is simple activity durable function, which connects to a database and updates respective rows, after sensor was unbonded.
 
 ```C#
 public class DatabaseOperation
@@ -331,7 +327,7 @@ public class DatabaseOperation
 }
 ```
 
-### How to run the sample?
+### How to run this sample?
 
 In order to run this sample, you will need to have instance of IoT Hub running in Azure and existing device identity. Once you have those, please set values for connection strings in *local.settings.json* file (located in GWManagementFunctions project) and in *AppSettings.json* file (located in SimulatedIQRFGW project)
 
@@ -343,10 +339,10 @@ Set multiple startup projects and let run both of the projects in the solution. 
 
 If your function job host is running on different port, please set the port appropriately. 
 
-Durable Function orchesration context should provide you with status check url (*statusQueryGetUri*). Once the whole communication flow of C2D and D2C messaging runs, you will be provided response on this URL.
+Durable Function orchestration context provides status check url (*statusQueryGetUri*). Once the whole communication flow of C2D and D2C messaging finishes, you will be provided response on this URL.
 
-Note that simulated IQRF device is capable to send only simple response and more complex flow of device unbond won't work, with this simulated device.
+Note that simulated IQRF device is capable to send only simple response and more complex flow of device unbond won't work with this simulated device.
 
 ### Summary
 
-Using Durable Functions orchestration patterns, we have implemented solution which enables correlation of C2D and D2C messages. It basically provides asynchronous request response communication model on top of IoT Hub's C2D and D2C messaging feature. Feel free to reuse, if you need to implement similar communication model in your solution.
+Using Durable Functions orchestration patterns we have implemented solution which enables correlation of IoT Hub C2D and D2C messages. It basically provides asynchronous request response communication model on top of IoT Hub's C2D and D2C messaging feature. Feel free to reuse, if you need to implement similar communication model in your solution.

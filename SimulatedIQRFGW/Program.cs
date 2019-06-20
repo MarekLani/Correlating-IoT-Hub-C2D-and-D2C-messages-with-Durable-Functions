@@ -48,6 +48,7 @@ namespace SimulatedIQRFGW
                     //In real scenario this message will contain response to command
                     Message eventMessage = new Message(Encoding.UTF8.GetBytes($"{{\"msgId\":\"{jsonObject.msgId}\"}}"));
                     await deviceClient.SendEventAsync(eventMessage).ConfigureAwait(false);
+                    Console.WriteLine($"Sent message: {{\"msgId\":\"{jsonObject.msgId}\"}}");
                 }
                 catch(Exception e) {
                     Console.WriteLine(e.Message);
