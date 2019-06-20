@@ -1,0 +1,232 @@
+{
+	"variables": [],
+	"info": {
+		"name": "VFN",
+		"_postman_id": "ae9c481b-4c53-6c33-711d-840540f716c3",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "VFN_ADD_Device",
+			"request": {
+				"url": "http://localhost:7071/api/OrchestrationFunction_HttpStart",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"devAddr\":\"1\",\n\t\"requestType\":\"addDevice\",\n\t\"gatewayIndex\":\"4\",\n\t\"gatewayID\":\"4\",\n\t\"sensorID\":\"27\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "VFN_Unbond_Device",
+			"request": {
+				"url": "http://localhost:7071/api/OrchestrationFunction_HttpStart",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"devAddr\":\"1\",\n\t\"requestType\":\"unbondDevice\",\n\t\"sensorID\":\"28\",\n\t\"sensorType\":\"1\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "VFN_SmartConnect",
+			"request": {
+				"url": "http://localhost:7071/api/OrchestrationFunction_HttpStart",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"devAddr\":\"0\",\n\t\"requestType\":\"smartConnect\",\n\t\"smartConnectCode\":\"Q32h55tPxP4icagZ3WSaYPcAjLz38qtJTF\",\n\t\"sensorID\":\"28\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "VFN_AddTask",
+			"request": {
+				"url": "http://localhost:7071/api/OrchestrationFunction_HttpStart",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/javascript",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"requestType\":\"addTask\",\n\t\"sensorType\":\"1\",\n\t\"frcCommand\":\"144\",\n\t\"taskType\":\"iqrfSensor_Frc\",\n\t\"sleepAfterFrcTime\":\"50\",\n\t\"cronSec\":\"0/10\",\n\t\"cronMin\":\"*\",\n\t\"cronHour\":\"*\",\n\t\"cronDayOfMonth\":\"*\",\n\t\"cronMonth\":\"*\",\n\t\"cronDayOfWeek\":\"*\",\n\t\"cronYear\":\"*\",\n\t\"period\":\"30\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "VFN_RemoveTasks",
+			"request": {
+				"url": "http://localhost:7071/api/OrchestrationFunction_HttpStart",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/javascript",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"requestType\":\"removeTasks\",\n\t\"taskIds\":[241975412]\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "VFN_ListTasks",
+			"request": {
+				"url": "http://localhost:7071/api/OrchestrationFunction_HttpStart",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/javascript",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"requestType\":\"listTasks\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "VFN_DevSleepCheck",
+			"request": {
+				"url": "http://localhost:7071/api/OrchestrationFunction_HttpStart",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/javascript",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"requestType\":\"sleepCheck\",\n\t\"devAddr\":\"1\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "VFN_GetTasks",
+			"request": {
+				"url": "http://localhost:7071/api/OrchestrationFunction_HttpStart",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/javascript",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"requestType\":\"getTasks\",\n\t\"taskIds\":[194458290]\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "VFN_DiscoveredDevices",
+			"request": {
+				"url": "http://localhost:7071/api/OrchestrationFunction_HttpStart",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/javascript",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"requestType\":\"discoveredDevices\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "VFN_ListTasks_AzureBackend",
+			"request": {
+				"url": {
+					"raw": "https://vfn-iot-durable-backend.azurewebsites.net/api/OrchestrationFunction_HttpStart?code=XEasmBADBtYSt0RUtskDygnzKESQqChplBmqA54BsbxhFmnGUkuF2A==",
+					"protocol": "https",
+					"host": [
+						"vfn-iot-durable-backend",
+						"azurewebsites",
+						"net"
+					],
+					"path": [
+						"api",
+						"OrchestrationFunction_HttpStart"
+					],
+					"query": [
+						{
+							"key": "code",
+							"value": "XEasmBADBtYSt0RUtskDygnzKESQqChplBmqA54BsbxhFmnGUkuF2A==",
+							"equals": true,
+							"description": ""
+						}
+					],
+					"variable": []
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/javascript",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"requestType\":\"listTasks\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}

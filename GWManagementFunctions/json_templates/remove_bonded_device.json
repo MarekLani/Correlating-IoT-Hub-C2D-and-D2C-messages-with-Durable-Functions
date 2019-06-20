@@ -1,0 +1,11 @@
+{
+  "mType": "iqmeshNetwork_RemoveBond",
+  "data": {
+    "msgId": "#MSG_ID#",
+    "repeat": 1,
+    "req": {
+      "deviceAddr": #DEV_ADDR#
+    },
+    "returnVerbose": true
+  }
+}
